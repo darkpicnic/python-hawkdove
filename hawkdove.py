@@ -107,6 +107,9 @@ def getEnergyFromFood(food):
 	return food / 2
 
 
+def getAgentCountByStatus(status):
+	return len( [a for a in agents if a.status == status] )
+
 def getAgentCountByType(agent_type):
 	return len([agent for agent in agents if agent.agent_type == agent_type])
 
@@ -118,15 +121,6 @@ def getNemesis(agent):
 			nemesis = random_agent
 
 	return nemesis
-
-
-def getAgentCountByStatus(status):
-	count = 0
-	for agent in agents:
-		if agent.status == status:
-			count += 1
-
-	return count
 
 
 def compete(agent, nemesis):
