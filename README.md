@@ -5,12 +5,14 @@ A simulation of Hawk Dove game theory in python
 
 NOTE: If you have pylab installed, at the end of the last round, a graph will be produced
 
-To run:
 
+Install optional graphing software
 <pre>
 	> sudo apt-get install python-matplotlib
 </pre>
 
+
+To run:
 <pre>
 	> chmod +x hawkdove.py
 	> ./hawkdove.py

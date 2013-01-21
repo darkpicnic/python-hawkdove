@@ -6,7 +6,7 @@ STARTING_DOVES = 100
 STARTING_HAWKS = 5
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 100
+ROUNDS = 50
 STARTING_ENERGY = 100;
 
 MIN_FOOD_PER_ROUND = 20
@@ -143,9 +143,10 @@ def getAliveAgentsCount():
 def getRandomAgents():
 	nemesis = None
 	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
-	agent = choice(active_agents)
+	max_index = len(active_agents) - 1
+	agent = active_agents[ randint(0, max_index) ]
 	while nemesis is None:
-		n = choice(active_agents)
+		n = active_agents[ randint(0, max_index) ]
 		if n is not agent:
 			nemesis = n
 
