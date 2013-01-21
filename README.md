@@ -3,7 +3,13 @@ python-hawkdove
 
 A simulation of Hawk Dove game theory in python
 
+NOTE: If you have pylab installed, at the end of the last round, a graph will be produced
+
 To run:
+
+<pre>
+	> sudo apt-get install python-matplotlib
+</pre>
 
 <pre>
 	> chmod +x hawkdove.py

@@ -2,11 +2,11 @@
 from random import choice, randint
 import time
 
-STARTING_DOVES = 50
-STARTING_HAWKS = 50
+STARTING_DOVES = 100
+STARTING_HAWKS = 5
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 500
+ROUNDS = 100
 STARTING_ENERGY = 100;
 
 MIN_FOOD_PER_ROUND = 20
@@ -31,6 +31,9 @@ agents = []
 graph_hawk_points = []
 graph_dove_points = []
 
+# Profiling
+
+
 class Agent:
  	id = 0
 	agent_type = None
@@ -54,8 +57,7 @@ def main():
 		food = getFood()
 
 		while getAgentCountByStatus(STATUS_ACTIVE) > 2:
-			agent = getRandomAgent()
-			nemesis = getRandomAgent(agent)
+			agent, nemesis = getRandomAgents()
 			compete(agent, nemesis, food)
 
 		# Energy cost of 'living'
@@ -79,6 +81,7 @@ def main():
 		print("Dove babies            : %s" % round_dove_babies)
 		print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
 		print("Doves                  : %s" % getPercByType(TYPE_DOVE))
+		print("----")
 		print("Round Processing time  : %s" % getTimeFormatted(toc - tic))
 		print("Elapsed time           : %s\n" % getTimeFormatted(time.clock() - main_tic))
 
@@ -115,6 +118,10 @@ def init():
 		agents.append(a2)
 
 
+def getAvgFromList(list):
+	return float( sum(list) / len(list) )
+
+
 def getTimeFormatted(seconds):
 	m, s = divmod(seconds, 60)
 	return "%02d:%02d" % (m, s)	
@@ -133,7 +140,20 @@ def getAliveAgentsCount():
 	return getAgentCountByStatus(STATUS_ACTIVE) + getAgentCountByStatus(STATUS_ASLEEP)
 
 
+def getRandomAgents():
+	nemesis = None
+	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
+	agent = choice(active_agents)
+	while nemesis is None:
+		n = choice(active_agents)
+		if n is not agent:
+			nemesis = n
+
+	return agent, nemesis
+
+
 def getRandomAgent(excluded_agent=None):
+
 	random_agent = None
 	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
 	while random_agent is None:
@@ -143,6 +163,7 @@ def getRandomAgent(excluded_agent=None):
 			a = choice(active_agents)
 			if a is not excluded_agent:
 				random_agent = a
+
 
 	return random_agent
 
@@ -169,24 +190,12 @@ def getEnergyFromFood(food):
 
 
 def getAgentCountByStatus(status):
-	return len( list(generateAgentsByStatus(status)) )
-	# return len( [a for a in agents if a.status == status] )
-
+	count = len( list(generateAgentsByStatus(status)) )
+	return count
 
 
 def getAgentCountByType(agent_type):
 	return len( list(generateAgentsByType(agent_type)) )
-	# return len([agent for agent in agents if agent.agent_type == agent_type])
-
-
-def getNemesis(agent):
-	nemesis = None
-	while nemesis is None:
-		random_agent = agents[randint(0, len(agents))]
-		if random_agent is not agent and random_agent.status == STATUS_ACTIVE:
-			nemesis = random_agent
-
-	return nemesis
 
 
 def compete(agent, nemesis, food):
@@ -238,10 +247,12 @@ def breed():
 			if agent.agent_type == TYPE_DOVE: dove_babies += 2
 			if agent.agent_type == TYPE_HAWK: hawk_babies += 2
 
+
 	return hawk_babies, dove_babies
 
 
 def cull():
+
 	dead_hawks = 0
 	dead_doves = 0
 	for index, agent in enumerate(agents):
@@ -249,6 +260,7 @@ def cull():
 			if agent.agent_type == TYPE_DOVE: dead_doves += 1
 			if agent.agent_type == TYPE_HAWK: dead_hawks += 1
 			del agents[index]
+
 
 	return dead_hawks, dead_doves
 
