@@ -2,11 +2,11 @@
 from random import choice, randint
 import time
 
-STARTING_DOVES = 100
-STARTING_HAWKS = 1
+STARTING_DOVES = 1000
+STARTING_HAWKS = 5
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 100
+ROUNDS = 15
 STARTING_ENERGY = 100;
 
 MIN_FOOD_PER_ROUND = 20
@@ -38,14 +38,14 @@ class Agent:
 def main():
 	init()
 
-	current_round = 0
+	current_round = 1
 	death_count = 0
 	dead_hawks  = 0
 	dead_doves  = 0
 	breed_count = 0
 	main_tic = time.clock()
 
-	while current_round < ROUNDS and len(agents) > 2:
+	while current_round <= ROUNDS and len(agents) > 2:
 		tic = time.clock()
 		awakenAgents()
 		food = getFood()
@@ -70,6 +70,8 @@ def main():
 		print("ROUND %d" % current_round)
 		print("Food produced          : %d" % food)
 		print("Population             : Hawks-> %d, Doves-> %d" % (getAgentCountByType(TYPE_HAWK), getAgentCountByType(TYPE_DOVE)))
+		print("Dead hawks             : %d" % round_dead_hawks)
+		print("Dead doves             : %d" % round_dead_doves)
 		print("Hawk babies            : %s" % round_hawk_babies)
 		print("Dove babies            : %s" % round_dove_babies)
 		print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
@@ -84,7 +86,7 @@ def main():
 	print("=============================================================")
 	print("Total dead agents      : %d" % death_count)
 	print("Total breeding agents  : %d" % breed_count)
-	print("Total rounds completed : %d" % current_round)
+	print("Total rounds completed : %d" % (current_round - 1))
 	print("Total population size  : %s" % len(agents))
 	print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
 	print("Doves                  : %s" % getPercByType(TYPE_DOVE))
@@ -125,11 +127,17 @@ def getAliveAgentsCount():
 
 
 def getRandomAgent(excluded_agent=None):
-	active_agents = [agent for agent in agents if agent.status == STATUS_ACTIVE]
-	if excluded_agent is not None:
-		active_agents = [agent for agent in agents if agent is not excluded_agent]
+	random_agent = None
+	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
+	while random_agent is None:
+		if excluded_agent is None:
+			random_agent = choice(active_agents)
+		else:
+			a = choice(active_agents)
+			if a is not excluded_agent:
+				random_agent = a
 
-	return choice(active_agents)
+	return random_agent
 
 
 def awakenAgents():
@@ -137,16 +145,31 @@ def awakenAgents():
 		agent.status = STATUS_ACTIVE
 
 
+def generateAgentsByType(agent_type):
+	for agent in agents:
+		if agent.agent_type == agent_type:
+			yield agent
+
+
+def generateAgentsByStatus(status):
+	for agent in agents:
+		if agent.status == status:
+			yield agent
+
+
 def getEnergyFromFood(food):
 	return food / 2
 
 
 def getAgentCountByStatus(status):
-	return len( [a for a in agents if a.status == status] )
+	return len( list(generateAgentsByStatus(status)) )
+	# return len( [a for a in agents if a.status == status] )
+
 
 
 def getAgentCountByType(agent_type):
-	return len([agent for agent in agents if agent.agent_type == agent_type])
+	return len( list(generateAgentsByType(agent_type)) )
+	# return len([agent for agent in agents if agent.agent_type == agent_type])
 
 
 def getNemesis(agent):
