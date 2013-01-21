@@ -124,8 +124,7 @@ def getNemesis(agent):
 
 
 def compete(agent, nemesis):
-	agent_list = [agent, nemesis]
-	winner = choice(agent_list)
+	winner = choice([agent, nemesis])
 	loser = agent if (winner is nemesis) else nemesis
 
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_HAWK:
