@@ -2,11 +2,11 @@
 from random import choice, randint
 import time
 
-STARTING_DOVES = 100
+STARTING_DOVES = 50
 STARTING_HAWKS = 1
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 40
+ROUNDS = 100
 STARTING_ENERGY = 100;
 
 REPRODUCTION_THRESHOLD = 200
@@ -16,7 +16,6 @@ MIN_FOOD_PER_ROUND = 20
 MAX_FOOD_PER_ROUND = 100
 ENERGY_COST_OF_BLUFFING = 10
 INJURY_FROM_FIGHTING = 120
-DEATH_FROM_INJURY = 50
 ENERGY_REQUIRED_FOR_LIVING = 20
 
 STATUS_ACTIVE = "active"
@@ -34,7 +33,6 @@ class Agent:
 	agent_type = None
 	status = STATUS_ACTIVE
 	energy = STARTING_ENERGY
-	injury = 0
 
 
 def main():
@@ -45,11 +43,13 @@ def main():
 	dead_hawks  = 0
 	dead_doves  = 0
 	breed_count = 0
-	tic = time.clock()
+	main_tic = time.clock()
 
 	while current_round < ROUNDS and len(agents) > 2:
+		tic = time.clock()
 		awakenAgents()
 		food = getFood()
+
 		while getAgentCountByStatus(STATUS_ACTIVE) > 2:
 			agent = getRandomAgent()
 			nemesis = getRandomAgent(agent)
@@ -60,21 +60,27 @@ def main():
 			agent.energy += ENERGY_PER_ROUND
 
 		round_dead_hawks, round_dead_doves = cull()
-		round_breed_count = breed()
+		round_hawk_babies, round_dove_babies = breed()
 		death_count += (round_dead_hawks + round_dead_doves)
-		breed_count += round_breed_count
+		breed_count += (round_hawk_babies + round_dove_babies)
+
+
+		toc = time.clock()
 
 		print("ROUND %d" % current_round)
 		print("Food produced: %d" % food)
 		print("Population: Hawks-> %d, Doves-> %d" % (getAgentCountByType(TYPE_HAWK), getAgentCountByType(TYPE_DOVE)))
+		print("Hawk babies: %s" % round_hawk_babies)
+		print("Dove babies: %s" % round_dove_babies)
 		print("Hawks: %s" % getPercByType(TYPE_HAWK))
 		print("Doves: %s" % getPercByType(TYPE_DOVE))
-		print("Bred: %d\n" % round_breed_count)
+		print("Processing time        : %s\n" % getTimeFormatted(toc - tic))
 
 		current_round += 1
 
 
-	toc = time.clock()
+	main_toc = time.clock()
+
 	print("=============================================================")
 	print("Total dead agents      : %d" % death_count)
 	print("Total breeding agents  : %d" % breed_count)
@@ -82,7 +88,7 @@ def main():
 	print("Total population size  : %s" % len(agents))
 	print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
 	print("Doves                  : %s" % getPercByType(TYPE_DOVE))
-	print("Processing time        : %s" % (toc - tic))
+	print("Processing time        : %s" % getTimeFormatted(main_toc - main_tic))
 	print("=============================================================")
 
 
@@ -98,6 +104,11 @@ def init():
 		a2 = Agent()
 		a2.agent_type = TYPE_HAWK
 		agents.append(a2)
+
+
+def getTimeFormatted(seconds):
+	m, s = divmod(seconds, 60)
+	return "%02d:%02d" % (m, s)	
 
 
 def getFood():
@@ -142,7 +153,7 @@ def getNemesis(agent):
 	nemesis = None
 	while nemesis is None:
 		random_agent = agents[randint(0, len(agents))]
-		if random_agent is not agent and random_agent.status is STATUS_ACTIVE:
+		if random_agent is not agent and random_agent.status == STATUS_ACTIVE:
 			nemesis = random_agent
 
 	return nemesis
@@ -155,7 +166,7 @@ def compete(agent, nemesis, food):
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_HAWK:
 		# Random winner chosen, loser gets injured, winner gets food
 		winner.energy += getEnergyFromFood(food)
-		loser.injury  += INJURY_FROM_FIGHTING
+		loser.energy  -= INJURY_FROM_FIGHTING
 
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_DOVE:
 		agent.energy += getEnergyFromFood(food)
@@ -181,7 +192,12 @@ def getNewAgent(agent_type, starting_energy=STARTING_ENERGY, status=STATUS_ASLEE
 
 
 def breed():
-	breed_count = 0
+	"""
+	If agent can breed, it halves its energy and produces 
+	two babies with starting energy (parent energy / 2)
+	"""
+	hawk_babies = 0
+	dove_babies = 0
 	for agent in agents:
 		if agent.energy > REPRODUCTION_THRESHOLD:
 			baby_agent_a = getNewAgent(agent.agent_type, (agent.energy/2))
@@ -189,16 +205,17 @@ def breed():
 			agents.append(baby_agent_b)
 			agents.append(baby_agent_a)
 			agent.energy /= 2
-			breed_count += 1
+			if agent.agent_type == TYPE_DOVE: dove_babies += 2
+			if agent.agent_type == TYPE_HAWK: hawk_babies += 2
 
-	return breed_count
+	return hawk_babies, dove_babies
 
 
 def cull():
 	dead_hawks = 0
 	dead_doves = 0
 	for index, agent in enumerate(agents):
-		if agent.injury >= DEATH_FROM_INJURY or agent.energy < ENERGY_REQUIRED_FOR_LIVING:
+		if agent.energy < ENERGY_REQUIRED_FOR_LIVING:
 			if agent.agent_type == TYPE_DOVE: dead_doves += 1
 			if agent.agent_type == TYPE_HAWK: dead_hawks += 1
 			del agents[index]
