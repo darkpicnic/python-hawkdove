@@ -2,20 +2,20 @@
 from random import choice, randint
 import time
 
-STARTING_DOVES = 50
+STARTING_DOVES = 100
 STARTING_HAWKS = 1
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
 ROUNDS = 100
 STARTING_ENERGY = 100;
 
-REPRODUCTION_THRESHOLD = 200
-ENERGY_PER_ROUND = 2
-
 MIN_FOOD_PER_ROUND = 20
 MAX_FOOD_PER_ROUND = 100
+
+ENERGY_REQUIRED_FOR_REPRODUCTION = 200
+ENERGY_LOSS_PER_ROUND = 2
 ENERGY_COST_OF_BLUFFING = 10
-INJURY_FROM_FIGHTING = 120
+ENERGY_LOSS_FROM_FIGHTING = 200
 ENERGY_REQUIRED_FOR_LIVING = 20
 
 STATUS_ACTIVE = "active"
@@ -57,7 +57,7 @@ def main():
 
 		# Energy cost of 'living'
 		for agent in agents:
-			agent.energy += ENERGY_PER_ROUND
+			agent.energy += ENERGY_LOSS_PER_ROUND
 
 		round_dead_hawks, round_dead_doves = cull()
 		round_hawk_babies, round_dove_babies = breed()
@@ -68,12 +68,12 @@ def main():
 		toc = time.clock()
 
 		print("ROUND %d" % current_round)
-		print("Food produced: %d" % food)
-		print("Population: Hawks-> %d, Doves-> %d" % (getAgentCountByType(TYPE_HAWK), getAgentCountByType(TYPE_DOVE)))
-		print("Hawk babies: %s" % round_hawk_babies)
-		print("Dove babies: %s" % round_dove_babies)
-		print("Hawks: %s" % getPercByType(TYPE_HAWK))
-		print("Doves: %s" % getPercByType(TYPE_DOVE))
+		print("Food produced          : %d" % food)
+		print("Population             : Hawks-> %d, Doves-> %d" % (getAgentCountByType(TYPE_HAWK), getAgentCountByType(TYPE_DOVE)))
+		print("Hawk babies            : %s" % round_hawk_babies)
+		print("Dove babies            : %s" % round_dove_babies)
+		print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
+		print("Doves                  : %s" % getPercByType(TYPE_DOVE))
 		print("Processing time        : %s\n" % getTimeFormatted(toc - tic))
 
 		current_round += 1
@@ -166,7 +166,7 @@ def compete(agent, nemesis, food):
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_HAWK:
 		# Random winner chosen, loser gets injured, winner gets food
 		winner.energy += getEnergyFromFood(food)
-		loser.energy  -= INJURY_FROM_FIGHTING
+		loser.energy  -= ENERGY_LOSS_FROM_FIGHTING
 
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_DOVE:
 		agent.energy += getEnergyFromFood(food)
@@ -199,7 +199,7 @@ def breed():
 	hawk_babies = 0
 	dove_babies = 0
 	for agent in agents:
-		if agent.energy > REPRODUCTION_THRESHOLD:
+		if agent.energy > ENERGY_REQUIRED_FOR_REPRODUCTION:
 			baby_agent_a = getNewAgent(agent.agent_type, (agent.energy/2))
 			baby_agent_b = getNewAgent(agent.agent_type, (agent.energy/2))
 			agents.append(baby_agent_b)
