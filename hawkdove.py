@@ -29,11 +29,11 @@ agents = []
 
 
 class Agent:
-  id = 0;
-	agent_type = None;
-	status = STATUS_ACTIVE;
-	energy = STARTING_ENERGY;
-	injury = 0;
+ 	id = 0
+	agent_type = None
+	status = STATUS_ACTIVE
+	energy = STARTING_ENERGY
+	injury = 0
 
 
 def main():
