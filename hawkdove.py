@@ -1,22 +1,23 @@
 #!/usr/bin/python
-
 from random import choice, randint
 import time
 
-STARTING_DOVES = 10000
-STARTING_HAWKS = 20
+STARTING_DOVES = 100
+STARTING_HAWKS = 1
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 1000
-STARTING_ENERGY = 40;
+ROUNDS = 40
+STARTING_ENERGY = 100;
 
-REPRODUCTION_THRESHOLD = 70
+REPRODUCTION_THRESHOLD = 200
+ENERGY_PER_ROUND = 2
 
-FOOD_PER_ROUND = 10
+MIN_FOOD_PER_ROUND = 20
+MAX_FOOD_PER_ROUND = 100
 ENERGY_COST_OF_BLUFFING = 10
-INJURY_FROM_FIGHTING = 10
+INJURY_FROM_FIGHTING = 120
 DEATH_FROM_INJURY = 50
-ENERGY_REQUIRED_FOR_LIVING = 15
+ENERGY_REQUIRED_FOR_LIVING = 20
 
 STATUS_ACTIVE = "active"
 STATUS_ASLEEP = "asleep"
@@ -41,25 +42,34 @@ def main():
 
 	current_round = 0
 	death_count = 0
+	dead_hawks  = 0
+	dead_doves  = 0
 	breed_count = 0
 	tic = time.clock()
 
 	while current_round < ROUNDS and len(agents) > 2:
 		awakenAgents()
+		food = getFood()
 		while getAgentCountByStatus(STATUS_ACTIVE) > 2:
 			agent = getRandomAgent()
 			nemesis = getRandomAgent(agent)
-			compete(agent, nemesis)
+			compete(agent, nemesis, food)
 
-		round_death_count = cull()
+		# Energy cost of 'living'
+		for agent in agents:
+			agent.energy += ENERGY_PER_ROUND
+
+		round_dead_hawks, round_dead_doves = cull()
 		round_breed_count = breed()
-		death_count += round_death_count
+		death_count += (round_dead_hawks + round_dead_doves)
 		breed_count += round_breed_count
 
 		print("ROUND %d" % current_round)
+		print("Food produced: %d" % food)
 		print("Population: Hawks-> %d, Doves-> %d" % (getAgentCountByType(TYPE_HAWK), getAgentCountByType(TYPE_DOVE)))
-		print("Dead this round: %d" % round_death_count)
-		print("Bred this round: %d" % round_breed_count)
+		print("Hawks: %s" % getPercByType(TYPE_HAWK))
+		print("Doves: %s" % getPercByType(TYPE_DOVE))
+		print("Bred: %d\n" % round_breed_count)
 
 		current_round += 1
 
@@ -70,7 +80,10 @@ def main():
 	print("Total breeding agents  : %d" % breed_count)
 	print("Total rounds completed : %d" % current_round)
 	print("Total population size  : %s" % len(agents))
+	print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
+	print("Doves                  : %s" % getPercByType(TYPE_DOVE))
 	print("Processing time        : %s" % (toc - tic))
+	print("=============================================================")
 
 
 
@@ -87,8 +100,18 @@ def init():
 		agents.append(a2)
 
 
+def getFood():
+	return randint(MIN_FOOD_PER_ROUND, MAX_FOOD_PER_ROUND)
+
+
+def getPercByType(agent_type):
+	perc = float(getAgentCountByType(agent_type)) / float(len(agents))
+	return '{percent:.2%}'.format(percent=perc)
+
+
 def getAliveAgentsCount():
 	return getAgentCountByStatus(STATUS_ACTIVE) + getAgentCountByStatus(STATUS_ASLEEP)
+
 
 def getRandomAgent(excluded_agent=None):
 	active_agents = [agent for agent in agents if agent.status == STATUS_ACTIVE]
@@ -110,8 +133,10 @@ def getEnergyFromFood(food):
 def getAgentCountByStatus(status):
 	return len( [a for a in agents if a.status == status] )
 
+
 def getAgentCountByType(agent_type):
 	return len([agent for agent in agents if agent.agent_type == agent_type])
+
 
 def getNemesis(agent):
 	nemesis = None
@@ -123,25 +148,25 @@ def getNemesis(agent):
 	return nemesis
 
 
-def compete(agent, nemesis):
+def compete(agent, nemesis, food):
 	winner = choice([agent, nemesis])
 	loser = agent if (winner is nemesis) else nemesis
 
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_HAWK:
 		# Random winner chosen, loser gets injured, winner gets food
-		winner.energy += getEnergyFromFood(FOOD_PER_ROUND)
+		winner.energy += getEnergyFromFood(food)
 		loser.injury  += INJURY_FROM_FIGHTING
 
 	if agent.agent_type == TYPE_HAWK and nemesis.agent_type == TYPE_DOVE:
-		agent.energy += getEnergyFromFood(FOOD_PER_ROUND)
+		agent.energy += getEnergyFromFood(food)
 		nemesis.energy -= ENERGY_COST_OF_BLUFFING
 
 	if agent.agent_type == TYPE_DOVE and nemesis.agent_type == TYPE_HAWK:
-		nemesis.energy += getEnergyFromFood(FOOD_PER_ROUND)
+		nemesis.energy += getEnergyFromFood(food)
 		agent.energy -= ENERGY_COST_OF_BLUFFING
 
 	if agent.agent_type == TYPE_DOVE and nemesis.agent_type == TYPE_DOVE:
-		winner.energy += getEnergyFromFood(FOOD_PER_ROUND)
+		winner.energy += getEnergyFromFood(food)
 		loser.energy  -= ENERGY_COST_OF_BLUFFING
 
 	nemesis.status = agent.status = STATUS_ASLEEP
@@ -168,14 +193,17 @@ def breed():
 
 	return breed_count
 
+
 def cull():
-	death_count = 0
+	dead_hawks = 0
+	dead_doves = 0
 	for index, agent in enumerate(agents):
 		if agent.injury >= DEATH_FROM_INJURY or agent.energy < ENERGY_REQUIRED_FOR_LIVING:
-			death_count += 1
+			if agent.agent_type == TYPE_DOVE: dead_doves += 1
+			if agent.agent_type == TYPE_HAWK: dead_hawks += 1
 			del agents[index]
 
-	return death_count
+	return dead_hawks, dead_doves
 
 
 main()
