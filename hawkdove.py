@@ -2,11 +2,11 @@
 from random import choice, randint
 import time
 
-STARTING_DOVES = 1000
-STARTING_HAWKS = 5
+STARTING_DOVES = 50
+STARTING_HAWKS = 50
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 15
+ROUNDS = 500
 STARTING_ENERGY = 100;
 
 MIN_FOOD_PER_ROUND = 20
@@ -27,6 +27,9 @@ TYPE_DOVE = "dove"
 
 agents = []
 
+# Graph stuff
+graph_hawk_points = []
+graph_dove_points = []
 
 class Agent:
  	id = 0
@@ -76,7 +79,12 @@ def main():
 		print("Dove babies            : %s" % round_dove_babies)
 		print("Hawks                  : %s" % getPercByType(TYPE_HAWK))
 		print("Doves                  : %s" % getPercByType(TYPE_DOVE))
-		print("Processing time        : %s\n" % getTimeFormatted(toc - tic))
+		print("Round Processing time  : %s" % getTimeFormatted(toc - tic))
+		print("Elapsed time           : %s\n" % getTimeFormatted(time.clock() - main_tic))
+
+		# Plot
+		graph_hawk_points.append(getAgentCountByType(TYPE_HAWK))
+		graph_dove_points.append(getAgentCountByType(TYPE_DOVE))
 
 		current_round += 1
 
@@ -92,7 +100,6 @@ def main():
 	print("Doves                  : %s" % getPercByType(TYPE_DOVE))
 	print("Processing time        : %s" % getTimeFormatted(main_toc - main_tic))
 	print("=============================================================")
-
 
 
 def init():
@@ -247,3 +254,12 @@ def cull():
 
 
 main()
+
+try:
+	from pylab import *
+except ImportError:
+	exit()
+else:
+	plot(graph_dove_points)
+	plot(graph_hawk_points)
+	show()
