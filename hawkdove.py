@@ -14,7 +14,7 @@ MAX_FOOD_PER_ROUND = 70
 
 ENERGY_REQUIRED_FOR_REPRODUCTION = 250
 ENERGY_LOSS_PER_ROUND = 2
-ENERGY_COST_OF_BLUFFING = 0
+ENERGY_COST_OF_BLUFFING = 10
 ENERGY_LOSS_FROM_FIGHTING = 200
 ENERGY_REQUIRED_FOR_LIVING = 20
 
@@ -55,12 +55,12 @@ def main():
 		awakenAgents()
 		food = getFood()
 
+		# This could be optimized further by creating a list every time
+		# that only has active agents, so it isn't iterating over entire list every time
 		while True:
 			agent, nemesis = getRandomAgents()
-			if agent is not None and nemesis is not None:
-				compete(agent, nemesis, food)
-			else:
-				break
+			if agent is None or nemesis is None: break
+			compete(agent, nemesis, food)
 
 		# Energy cost of 'living'
 		for agent in agents:
