@@ -3,18 +3,18 @@ from random import choice, randint
 import time
 
 STARTING_DOVES = 100
-STARTING_HAWKS = 5
+STARTING_HAWKS = 100
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 50
+ROUNDS = 20
 STARTING_ENERGY = 100;
 
-MIN_FOOD_PER_ROUND = 20
-MAX_FOOD_PER_ROUND = 100
+MIN_FOOD_PER_ROUND = 50
+MAX_FOOD_PER_ROUND = 50
 
 ENERGY_REQUIRED_FOR_REPRODUCTION = 200
 ENERGY_LOSS_PER_ROUND = 2
-ENERGY_COST_OF_BLUFFING = 10
+ENERGY_COST_OF_BLUFFING = 0
 ENERGY_LOSS_FROM_FIGHTING = 200
 ENERGY_REQUIRED_FOR_LIVING = 20
 
@@ -56,9 +56,12 @@ def main():
 		awakenAgents()
 		food = getFood()
 
-		while getAgentCountByStatus(STATUS_ACTIVE) > 2:
+		while True:
 			agent, nemesis = getRandomAgents()
-			compete(agent, nemesis, food)
+			if agent is not None and nemesis is not None:
+				compete(agent, nemesis, food)
+			else:
+				break
 
 		# Energy cost of 'living'
 		for agent in agents:
@@ -143,6 +146,8 @@ def getAliveAgentsCount():
 def getRandomAgents():
 	nemesis = None
 	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
+	if len(active_agents) < 2:
+		return None, None
 	max_index = len(active_agents) - 1
 	agent = active_agents[ randint(0, max_index) ]
 	while nemesis is None:
@@ -187,7 +192,7 @@ def generateAgentsByStatus(status):
 
 
 def getEnergyFromFood(food):
-	return food / 2
+	return food # 1 to 1
 
 
 def getAgentCountByStatus(status):
@@ -242,9 +247,12 @@ def breed():
 		if agent.energy > ENERGY_REQUIRED_FOR_REPRODUCTION:
 			baby_agent_a = getNewAgent(agent.agent_type, (agent.energy/2))
 			baby_agent_b = getNewAgent(agent.agent_type, (agent.energy/2))
+
 			agents.append(baby_agent_b)
 			agents.append(baby_agent_a)
+
 			agent.energy /= 2
+
 			if agent.agent_type == TYPE_DOVE: dove_babies += 2
 			if agent.agent_type == TYPE_HAWK: hawk_babies += 2
 
