@@ -6,13 +6,13 @@ STARTING_DOVES = 100
 STARTING_HAWKS = 100
 STARTING_POPULATION = STARTING_HAWKS + STARTING_DOVES
 
-ROUNDS = 20
+ROUNDS = 100
 STARTING_ENERGY = 100;
 
-MIN_FOOD_PER_ROUND = 50
-MAX_FOOD_PER_ROUND = 50
+MIN_FOOD_PER_ROUND = 20
+MAX_FOOD_PER_ROUND = 70
 
-ENERGY_REQUIRED_FOR_REPRODUCTION = 200
+ENERGY_REQUIRED_FOR_REPRODUCTION = 250
 ENERGY_LOSS_PER_ROUND = 2
 ENERGY_COST_OF_BLUFFING = 0
 ENERGY_LOSS_FROM_FIGHTING = 200
@@ -20,7 +20,6 @@ ENERGY_REQUIRED_FOR_LIVING = 20
 
 STATUS_ACTIVE = "active"
 STATUS_ASLEEP = "asleep"
-STATUS_DEAD   = "dead"
 
 TYPE_HAWK = "hawk"
 TYPE_DOVE = "dove"
@@ -156,22 +155,6 @@ def getRandomAgents():
 			nemesis = n
 
 	return agent, nemesis
-
-
-def getRandomAgent(excluded_agent=None):
-
-	random_agent = None
-	active_agents = list(generateAgentsByStatus(STATUS_ACTIVE))
-	while random_agent is None:
-		if excluded_agent is None:
-			random_agent = choice(active_agents)
-		else:
-			a = choice(active_agents)
-			if a is not excluded_agent:
-				random_agent = a
-
-
-	return random_agent
 
 
 def awakenAgents():
